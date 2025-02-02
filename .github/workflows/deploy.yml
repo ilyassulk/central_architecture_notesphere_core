@@ -76,4 +76,4 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           script: |
             echo "Removing remote docker-compose file..."
-            rm -f ~/docker-compose-${{ github.sha }}
+            rm -rf ~/docker-compose-${{ github.sha }}
