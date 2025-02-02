@@ -7,7 +7,7 @@ spring:
         - id: stt_request
           uri: http://speech-to-text-notesphere-manager:8080
           predicates:
-            - Path=/ai/speech-to-text/request
+            - Path=/**/ai/speech-to-text/request/**
           filters:
             - RewritePath=/ai/speech-to-text/request, /request
             - AddRequestHeader=X-Gateway-Request, true
