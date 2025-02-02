@@ -65,7 +65,7 @@ jobs:
             echo "Logging in to Docker Hub on remote host..."
             echo "${{ secrets.SSH_PASSWORD }}" | sudo -S docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_PASSWORD }}
             echo "Deploying new stack..."
-            echo "${{ secrets.SSH_PASSWORD }}" | sudo -S docker stack deploy -c ~/docker-compose.yml central_architecture_noteshphere_stack
+            echo "${{ secrets.SSH_PASSWORD }}" | sudo -S docker stack deploy -c ~/docker-compose-${{ github.sha }}.yml central_architecture_noteshphere_stack
 
       # 7. Удаление уникального файла docker-compose с сервера для предотвращения конфликтов
       - name: Remove remote docker-compose file
