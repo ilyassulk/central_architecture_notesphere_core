@@ -5,7 +5,7 @@ spring:
     gateway:
       routes:
         - id: stt_request
-          uri: http://localhost:80
+          uri: http://speech-to-text-notesphere-manager:8080
           predicates:
             - Path=/ai/speech-to-text/request
           filters:
@@ -13,7 +13,7 @@ spring:
             - AddRequestHeader=X-Gateway-Request, true
 
         - id: stt_result
-          uri: http://localhost:80
+          uri: http://speech-to-text-notesphere-manager:8080
           predicates:
             - Path=/ai/speech-to-text/result/{request_id}
           filters:
