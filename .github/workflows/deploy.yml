@@ -3,7 +3,7 @@ name: CI/CD Deployment
 on:
   push:
     branches:
-      - master
+      - main
 
 jobs:
   deploy:
@@ -13,14 +13,14 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      # 2. Логин в Docker Hub (секретные данные: DOCKERHUB_USERNAME и DOCKERHUB_PASSWORD)
+      # 2. Логин в Docker Hub (используется для сборки и пуша образа)
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
-      # 3. Сборка и пуш Docker образа из каталога ./api_gateway
+      # 3. Сборка и пуш Docker-образа из каталога ./api_gateway
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v4
         with:
@@ -29,20 +29,20 @@ jobs:
           push: true
           tags: isdockero/api_gateway_notesphere:latest
 
-      # 4. Подключение по SSH и остановка текущего стека, а также удаление старого образа
+      # 4. Остановка работающего стека и удаление старого образа (с sudo)
       - name: Stop running stack and remove old image
         uses: appleboy/ssh-action@v0.1.7
         with:
-          host: ${{ vars.SERVER_HOST }}         # Непрерывно видимый (не секретный) параметр, заданный в GitHub Variables
-          username: ${{ secrets.SSH_USERNAME }}   # Секретный логин для SSH
-          password: ${{ secrets.SSH_PASSWORD }}   # Секретный пароль для SSH
+          host: ${{ vars.SERVER_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
           script: |
             echo "Stopping existing stack..."
-            docker stack rm my_stack || true
+            sudo docker stack rm my_stack || true
             echo "Waiting for the stack to stop..."
             sleep 10
             echo "Removing old image..."
-            docker image rm -f isdockero/api_gateway_notesphere:latest || true
+            sudo docker image rm -f isdockero/api_gateway_notesphere:latest || true
 
       # 5. Копирование файла docker-compose.yaml на удалённый сервер
       - name: Copy docker-compose.yaml to server
@@ -54,7 +54,7 @@ jobs:
           source: "docker-compose.yaml"
           target: "~/"
 
-      # 6. Деплой нового стека на сервере
+      # 6. Подключение по SSH, авторизация в Docker Hub на сервере и деплой нового стека (с sudo)
       - name: Deploy new stack
         uses: appleboy/ssh-action@v0.1.7
         with:
@@ -62,5 +62,7 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
           script: |
+            echo "Logging in to Docker Hub on remote host..."
+            sudo docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_PASSWORD }}
             echo "Deploying new stack..."
-            docker stack deploy -c ~/docker-compose.yaml my_stack
+            sudo docker stack deploy -c ~/docker-compose.yaml my_stack
