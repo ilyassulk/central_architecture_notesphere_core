@@ -38,7 +38,7 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           script: |
             echo "Stopping existing stack..."
-            echo "${{ secrets.SSH_PASSWORD }}" | sudo -S docker stack rm my_stack || true
+            echo "${{ secrets.SSH_PASSWORD }}" | sudo -S docker stack rm central_architecture_noteshphere_stack || true
             echo "Waiting for the stack to stop..."
             sleep 10
             echo "Removing old image..."
@@ -65,4 +65,4 @@ jobs:
             echo "Logging in to Docker Hub on remote host..."
             echo "${{ secrets.SSH_PASSWORD }}" | sudo -S docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_PASSWORD }}
             echo "Deploying new stack..."
-            echo "${{ secrets.SSH_PASSWORD }}" | sudo -S docker stack deploy -c ~/docker-compose.yaml my_stack
+            echo "${{ secrets.SSH_PASSWORD }}" | sudo -S docker stack deploy -c ~/docker-compose.yaml central_architecture_noteshphere_stack
