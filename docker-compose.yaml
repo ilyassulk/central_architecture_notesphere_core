@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  api_gateway:
+    image: isdockero/api_gateway_notesphere:latest
+    networks:
+      - app-network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+      placement:
+        constraints:
+          - node.labels.api_gateway == true
+    ports:
+      - target: 8080
+        published: 80
+        protocol: tcp
+        mode: host
+
+  minio:
+    image: minio/minio:latest
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    networks:
+      - app-network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - app-network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - app-network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+
+  mongo:
+    image: mongo:latest
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin
+      MONGO_INITDB_DATABASE: admin
+    networks:
+      - app-network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+
+volumes:
+  minio_data:
+  mongo_data:
+
+networks:
+  app-network:
+    driver: overlay

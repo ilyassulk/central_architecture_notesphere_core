@@ -1,0 +1,66 @@
+name: CI/CD Deployment
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Клонирование репозитория
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      # 2. Логин в Docker Hub (секретные данные: DOCKERHUB_USERNAME и DOCKERHUB_PASSWORD)
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      # 3. Сборка и пуш Docker образа из каталога ./api_gateway
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./api_gateway
+          file: ./api_gateway/Dockerfile
+          push: true
+          tags: isdockero/api_gateway_notesphere:latest
+
+      # 4. Подключение по SSH и остановка текущего стека, а также удаление старого образа
+      - name: Stop running stack and remove old image
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ vars.SERVER_HOST }}         # Непрерывно видимый (не секретный) параметр, заданный в GitHub Variables
+          username: ${{ secrets.SSH_USERNAME }}   # Секретный логин для SSH
+          password: ${{ secrets.SSH_PASSWORD }}   # Секретный пароль для SSH
+          script: |
+            echo "Stopping existing stack..."
+            docker stack rm my_stack || true
+            echo "Waiting for the stack to stop..."
+            sleep 10
+            echo "Removing old image..."
+            docker image rm -f isdockero/api_gateway_notesphere:latest || true
+
+      # 5. Копирование файла docker-compose.yaml на удалённый сервер
+      - name: Copy docker-compose.yaml to server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ vars.SERVER_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          source: "docker-compose.yaml"
+          target: "~/"
+
+      # 6. Деплой нового стека на сервере
+      - name: Deploy new stack
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ vars.SERVER_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          script: |
+            echo "Deploying new stack..."
+            docker stack deploy -c ~/docker-compose.yaml my_stack

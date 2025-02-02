@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: api_gateway
+  cloud:
+    gateway:
+      routes:
+        - id: stt_request
+          uri: http://localhost:80
+          predicates:
+            - Path=/ai/speech-to-text/request
+          filters:
+            - RewritePath=/ai/speech-to-text/request, /request
+            - AddRequestHeader=X-Gateway-Request, true
+
+        - id: stt_result
+          uri: http://localhost:80
+          predicates:
+            - Path=/ai/speech-to-text/result/{request_id}
+          filters:
+            - RewritePath=/ai/speech-to-text/result/(?<request_id>.*), /result/${request_id}
+            - AddRequestHeader=X-Gateway-Request, true
