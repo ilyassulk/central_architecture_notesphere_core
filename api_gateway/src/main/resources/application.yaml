@@ -21,11 +21,11 @@ spring:
           predicates:
             - Path=/ai/speech-to-text/request
           filters:
-            - RewritePath=/ai/speech-to-text/request, /request
+            - "RewritePath=/ai/speech-to-text/request, /ai/speech-to-text/request"
 
         - id: stt_result
           uri: http://notesphere.ddns.net:8080
           predicates:
             - Path=/ai/speech-to-text/result/{request_id}
           filters:
-            - "RewritePath=/ai/speech-to-text/result/(.*), /result/$1"
+            - "RewritePath=/ai/speech-to-text/result/(.*), /ai/speech-to-text/result/$1"
