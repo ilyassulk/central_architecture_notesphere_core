@@ -3,11 +3,23 @@ spring:
     name: api_gateway
   cloud:
     gateway:
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOriginPatterns: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
       routes:
         - id: stt_request
           uri: http://speech-to-text-notesphere-manager:8080
           predicates:
-            - Path=/**/ai/speech-to-text/request/**
+            - Path=/ai/speech-to-text/request
           filters:
             - RewritePath=/ai/speech-to-text/request, /request
             - AddRequestHeader=X-Gateway-Request, true
@@ -17,5 +29,5 @@ spring:
           predicates:
             - Path=/ai/speech-to-text/result/{request_id}
           filters:
-            - RewritePath=/ai/speech-to-text/result/(?<request_id>.*), /result/${request_id}
+            - "RewritePath=/ai/speech-to-text/result/(.*), /result/$1"
             - AddRequestHeader=X-Gateway-Request, true
