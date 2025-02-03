@@ -17,17 +17,15 @@ spring:
             allowCredentials: true
       routes:
         - id: stt_request
-          uri: http://speech-to-text-notesphere-manager:8080
+          uri: http://notesphere.ddns.net:8080
           predicates:
             - Path=/ai/speech-to-text/request
           filters:
             - RewritePath=/ai/speech-to-text/request, /request
-            - AddRequestHeader=X-Gateway-Request, true
 
         - id: stt_result
-          uri: http://speech-to-text-notesphere-manager:8080
+          uri: http://notesphere.ddns.net:8080
           predicates:
             - Path=/ai/speech-to-text/result/{request_id}
           filters:
             - "RewritePath=/ai/speech-to-text/result/(.*), /result/$1"
-            - AddRequestHeader=X-Gateway-Request, true
