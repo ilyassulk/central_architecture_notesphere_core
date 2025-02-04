@@ -44,6 +44,9 @@ jobs:
             echo "Removing old image..."
             echo "${{ secrets.SSH_PASSWORD }}" | sudo -S docker image rm -f isdockero/api_gateway_notesphere:latest || true
 
+      - name: Rename docker-compose.yml locally
+        run: mv docker-compose.yml docker-compose-${{ github.sha }}.yml
+
       # 5. Передача файла docker-compose.yml на удалённый сервер
       - name: Copy docker-compose.yml to server
         uses: appleboy/scp-action@master
@@ -51,9 +54,8 @@ jobs:
           host: ${{ vars.SERVER_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
-          source: "docker-compose.yml"
-          # Теперь файл будет сохранён под именем "docker-compose-<commit_sha>" в домашней папке
-          target: "~/docker-compose-${{ github.sha }}.yml"
+          source: "docker-compose-${{ github.sha }}.yml"
+          target: "~/"
 
       # 6. Подключение по SSH, авторизация в Docker Hub на сервере и деплой нового стека (с sudo -S)
       - name: Deploy new stack
