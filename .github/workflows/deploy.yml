@@ -44,9 +44,6 @@ jobs:
             echo "Removing old image..."
             echo "${{ secrets.SSH_PASSWORD }}" | sudo -S docker image rm -f isdockero/api_gateway_notesphere:latest || true
 
-      - name: Rename docker-compose.yml locally
-        run: mv docker-compose.yml docker-compose-${{ github.sha }}.yml
-
       # 5. Передача файла docker-compose.yml на удалённый сервер
       - name: Copy docker-compose.yml to server
         uses: appleboy/scp-action@master
@@ -54,8 +51,8 @@ jobs:
           host: ${{ vars.SERVER_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
-          source: "docker-compose-${{ github.sha }}.yml"
-          target: "~/"
+          source: "docker-compose.yml"
+          target: "~/docker-compose-${{ github.sha }}"
 
       # 6. Подключение по SSH, авторизация в Docker Hub на сервере и деплой нового стека (с sudo -S)
       - name: Deploy new stack
@@ -68,7 +65,7 @@ jobs:
             echo "Logging in to Docker Hub on remote host..."
             echo "${{ secrets.SSH_PASSWORD }}" | sudo -S docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_PASSWORD }}
             echo "Deploying new stack..."
-            echo "${{ secrets.SSH_PASSWORD }}" | sudo -S docker stack deploy -c ~/docker-compose-${{ github.sha }}.yml central_architecture_noteshphere_stack
+            echo "${{ secrets.SSH_PASSWORD }}" | sudo -S docker stack deploy -c ~/docker-compose-${{ github.sha }}/docker-compose.yml central_architecture_noteshphere_stack
 
       # 7. Удаление уникального файла docker-compose с сервера для предотвращения конфликтов
       - name: Remove remote docker-compose file
@@ -79,4 +76,4 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           script: |
             echo "Removing remote docker-compose file..."
-            rm -f ~/docker-compose-${{ github.sha }}.yml
+            rm -rf ~/docker-compose-${{ github.sha }}
