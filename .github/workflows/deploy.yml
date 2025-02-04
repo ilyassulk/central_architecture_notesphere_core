@@ -52,7 +52,8 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
           source: "docker-compose.yml"
-          target: "~/docker-compose-${{ github.sha }}"
+          # Теперь файл будет сохранён под именем "docker-compose-<commit_sha>" в домашней папке
+          target: "~/docker-compose-${{ github.sha }}.yml"
 
       # 6. Подключение по SSH, авторизация в Docker Hub на сервере и деплой нового стека (с sudo -S)
       - name: Deploy new stack
@@ -65,7 +66,7 @@ jobs:
             echo "Logging in to Docker Hub on remote host..."
             echo "${{ secrets.SSH_PASSWORD }}" | sudo -S docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_PASSWORD }}
             echo "Deploying new stack..."
-            echo "${{ secrets.SSH_PASSWORD }}" | sudo -S docker stack deploy -c ~/docker-compose-${{ github.sha }}/docker-compose.yml central_architecture_noteshphere_stack
+            echo "${{ secrets.SSH_PASSWORD }}" | sudo -S docker stack deploy -c ~/docker-compose-${{ github.sha }}.yml central_architecture_noteshphere_stack
 
       # 7. Удаление уникального файла docker-compose с сервера для предотвращения конфликтов
       - name: Remove remote docker-compose file
@@ -76,4 +77,4 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           script: |
             echo "Removing remote docker-compose file..."
-            rm -rf ~/docker-compose-${{ github.sha }}
+            rm -f ~/docker-compose-${{ github.sha }}.yml
