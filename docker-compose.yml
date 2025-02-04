@@ -74,6 +74,26 @@ services:
       restart_policy:
         condition: any
 
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - target: 9090
+        published: 9090
+        protocol: tcp
+        mode: host
+    configs:
+      - source: prometheus_config
+        target: /etc/prometheus/prometheus.yml
+    networks:
+      - app-network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+      placement:
+        constraints:
+          - node.labels.prometeus == true
+
 volumes:
   minio_data:
   mongo_data:
@@ -82,3 +102,6 @@ networks:
   app-network:
     external: true
 
+configs:
+  prometheus_config:
+    file: ./prometheus.yml
