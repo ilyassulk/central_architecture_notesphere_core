@@ -78,7 +78,14 @@ services:
   mongodb_exporter:
     image: percona/mongodb_exporter:latest
     environment:
-      MONGODB_URI: "mongodb://monitor:monitorPassword@mongo:27017/admin"
+      # Укажите данные для подключения к MongoDB
+      MONGODB_USER: monitor
+      MONGODB_PASSWORD: "monitorPassword"
+      MONGODB_AUTHENTICATION_DATABASE: admin
+      MONGODB_HOST: mongo
+      MONGODB_PORT: 27017
+    command:
+      - '--collect.all'
     networks:
       - app-network
     depends_on:
@@ -87,7 +94,6 @@ services:
       replicas: 1
       restart_policy:
         condition: any
-    command: /bin/sh -c "sleep 10 && /bin/mongodb_exporter"
 
 
   prometheus:
