@@ -9,18 +9,18 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      # 1. Клонирование репозитория
+      # . Клонирование репозитория
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      # 2. Логин в Docker Hub для сборки и пуша образа
+      # . Логин в Docker Hub для сборки и пуша образа
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
-      # 3. Сборка и пуш Docker-образа из каталога ./api_gateway
+      # . Сборка и пуш Docker-образа из каталога ./api_gateway
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v4
         with:
@@ -29,7 +29,15 @@ jobs:
           push: true
           tags: isdockero/api_gateway_notesphere:latest
 
-      # 4. Остановка работающего стека и удаление старого образа (с sudo и опцией -S)
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./mongodb
+          file: ./mongodb/Dockerfile
+          push: true
+          tags: isdockero/mongo_with_prom:latest
+
+      # . Остановка работающего стека и удаление старого образа (с sudo и опцией -S)
       - name: Stop running stack and remove old image
         uses: appleboy/ssh-action@v0.1.7
         with:
@@ -43,8 +51,9 @@ jobs:
             sleep 10
             echo "Removing old image..."
             echo "${{ secrets.SSH_PASSWORD }}" | sudo -S docker image rm -f isdockero/api_gateway_notesphere:latest || true
+            echo "${{ secrets.SSH_PASSWORD }}" | sudo -S docker image rm -f isdockero/mongo_with_prom:latest || true
 
-      # 5. Удаляем существующий prometheus.yml на сервере с использованием sudo
+      # . Удаляем существующий prometheus.yml на сервере с использованием sudo
       - name: Remove existing prometheus.yml on remote host
         uses: appleboy/ssh-action@v0.1.7
         with:
@@ -55,7 +64,7 @@ jobs:
             echo "Удаляем старый prometheus.yml с использованием sudo..."
             echo "${{ secrets.SSH_PASSWORD }}" | sudo -S rm -f ~/prometheus.yml
 
-      # 6. Копируем новый prometheus.yml на сервер
+      # . Копируем новый prometheus.yml на сервер
       - name: Copy new prometheus.yml to remote host
         uses: appleboy/scp-action@master
         with:
@@ -65,7 +74,7 @@ jobs:
           source: "./prometheus.yml"        # путь к файлу в репозитории
           target: "~/"          # целевой путь на сервере
 
-      # 7. Передача файла docker-compose.yml на удалённый сервер
+      # . Передача файла docker-compose.yml на удалённый сервер
       - name: Copy docker-compose.yml to server
         uses: appleboy/scp-action@master
         with:
@@ -75,7 +84,7 @@ jobs:
           source: "docker-compose.yml"
           target: "~/docker-compose-${{ github.sha }}"
 
-      # 8. Подключение по SSH, авторизация в Docker Hub на сервере и деплой нового стека (с sudo -S)
+      # . Подключение по SSH, авторизация в Docker Hub на сервере и деплой нового стека (с sudo -S)
       - name: Deploy new stack
         uses: appleboy/ssh-action@v0.1.7
         with:
@@ -88,7 +97,7 @@ jobs:
             echo "Deploying new stack..."
             echo "${{ secrets.SSH_PASSWORD }}" | sudo -S docker stack deploy -c ~/docker-compose-${{ github.sha }}/docker-compose.yml central_architecture_noteshphere_stack
 
-      # 9. Удаление уникального файла docker-compose с сервера для предотвращения конфликтов
+      # . Удаление уникального файла docker-compose с сервера для предотвращения конфликтов
       - name: Remove remote docker-compose file
         uses: appleboy/ssh-action@v0.1.7
         with:

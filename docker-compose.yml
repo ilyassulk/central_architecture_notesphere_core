@@ -61,13 +61,24 @@ services:
         condition: any
 
   mongo:
-    image: mongo:latest
+    image: isdockero/mongo_with_prom:latest
     volumes:
       - mongo_data:/data/db
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: admin
       MONGO_INITDB_DATABASE: admin
+    networks:
+      - app-network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+
+  mongodb_exporter:
+    image: percona/mongodb_exporter:latest
+    environment:
+      MONGODB_URI: "mongodb://monitor:monitorPassword@mongo:27017/admin"
     networks:
       - app-network
     deploy:
