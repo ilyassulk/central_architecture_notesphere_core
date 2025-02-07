@@ -81,6 +81,8 @@ services:
       MONGODB_URI: "mongodb://monitor:monitorPassword@mongo:27017/admin"
     networks:
       - app-network
+    depends_on:
+      - mongo
     deploy:
       replicas: 1
       restart_policy:
