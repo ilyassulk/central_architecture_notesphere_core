@@ -79,8 +79,8 @@ services:
     image: percona/mongodb_exporter:latest
     environment:
       # Укажите данные для подключения к MongoDB
-      MONGODB_USER: monitor
-      MONGODB_PASSWORD: "monitorPassword"
+      MONGODB_USER: admin
+      MONGODB_PASSWORD: admin
       MONGODB_AUTHENTICATION_DATABASE: admin
       MONGODB_HOST: mongo
       MONGODB_PORT: 27017
