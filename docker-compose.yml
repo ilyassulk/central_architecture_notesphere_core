@@ -87,6 +87,8 @@ services:
       replicas: 1
       restart_policy:
         condition: any
+    command: /bin/sh -c "sleep 10 && /bin/mongodb_exporter"
+
 
   prometheus:
     image: prom/prometheus:latest
