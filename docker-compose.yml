@@ -76,7 +76,7 @@ services:
         condition: any
 
   mongodb_exporter:
-    image: percona/mongodb_exporter:latest
+    image: percona/mongodb_exporter:0.43.1
     environment:
       # Укажите данные для подключения к MongoDB
       MONGODB_USER: admin
