@@ -29,3 +29,13 @@ spring:
             - Path=/ai/speech-to-text/result/{request_id}
           filters:
             - "RewritePath=/ai/speech-to-text/result/(.*), /result/$1"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, prometheus
+  prometheus:
+    metrics:
+      export:
+        enabled: true

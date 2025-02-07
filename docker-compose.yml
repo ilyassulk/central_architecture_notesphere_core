@@ -94,9 +94,34 @@ services:
         constraints:
           - node.labels.prometeus == true
 
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - target: 3000
+        published: 3000
+        protocol: tcp
+        mode: host
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - app-network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+      placement:
+        constraints:
+          - node.labels.grafana == true
+
 volumes:
   minio_data:
   mongo_data:
+  grafana_data:
+    driver: local
 
 networks:
   app-network:

@@ -44,7 +44,28 @@ jobs:
             echo "Removing old image..."
             echo "${{ secrets.SSH_PASSWORD }}" | sudo -S docker image rm -f isdockero/api_gateway_notesphere:latest || true
 
-      # 5. Передача файла docker-compose.yml на удалённый сервер
+      # 5. Удаляем существующий prometheus.yml на сервере с использованием sudo
+      - name: Remove existing prometheus.yml on remote host
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ vars.SERVER_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          script: |
+            echo "Удаляем старый prometheus.yml с использованием sudo..."
+            echo "${{ secrets.SSH_PASSWORD }}" | sudo -S rm -f ~/prometheus.yml
+
+      # 6. Копируем новый prometheus.yml на сервер
+      - name: Copy new prometheus.yml to remote host
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ vars.SERVER_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          source: "./prometheus.yml"        # путь к файлу в репозитории
+          target: "~/"          # целевой путь на сервере
+
+      # 7. Передача файла docker-compose.yml на удалённый сервер
       - name: Copy docker-compose.yml to server
         uses: appleboy/scp-action@master
         with:
@@ -54,7 +75,7 @@ jobs:
           source: "docker-compose.yml"
           target: "~/docker-compose-${{ github.sha }}"
 
-      # 6. Подключение по SSH, авторизация в Docker Hub на сервере и деплой нового стека (с sudo -S)
+      # 8. Подключение по SSH, авторизация в Docker Hub на сервере и деплой нового стека (с sudo -S)
       - name: Deploy new stack
         uses: appleboy/ssh-action@v0.1.7
         with:
@@ -67,7 +88,7 @@ jobs:
             echo "Deploying new stack..."
             echo "${{ secrets.SSH_PASSWORD }}" | sudo -S docker stack deploy -c ~/docker-compose-${{ github.sha }}/docker-compose.yml central_architecture_noteshphere_stack
 
-      # 7. Удаление уникального файла docker-compose с сервера для предотвращения конфликтов
+      # 9. Удаление уникального файла docker-compose с сервера для предотвращения конфликтов
       - name: Remove remote docker-compose file
         uses: appleboy/ssh-action@v0.1.7
         with:
@@ -77,3 +98,5 @@ jobs:
           script: |
             echo "Removing remote docker-compose file..."
             rm -rf ~/docker-compose-${{ github.sha }}
+
+
