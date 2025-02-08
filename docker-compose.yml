@@ -62,6 +62,11 @@ services:
 
   mongo:
     image: isdockero/mongo_with_prom:latest
+    ports:
+      - target: 27017
+        published: 27017
+        protocol: tcp
+        mode: host
     volumes:
       - mongo_data:/data/db
     environment:
@@ -74,6 +79,9 @@ services:
       replicas: 1
       restart_policy:
         condition: any
+      placement:
+        constraints:
+          - node.labels.monitoring == true
 
   mongodb_exporter:
     image: percona/mongodb_exporter:0.43.1
