@@ -91,12 +91,7 @@ services:
         protocol: tcp
         mode: host
     environment:
-      # Укажите данные для подключения к MongoDB
-      MONGODB_USER: monitor
-      MONGODB_PASSWORD: monitorPassword
-      MONGODB_AUTHENTICATION_DATABASE: admin
-      MONGODB_HOST: mongo
-      MONGODB_PORT: 27017
+      MONGODB_URI: "mongodb://monitor:monitorPassword@mongo:27017/admin?authSource=admin"
     networks:
       - app-network
     depends_on:
@@ -108,6 +103,7 @@ services:
       placement:
         constraints:
           - node.labels.monitoring == true
+
 
 
   prometheus:
