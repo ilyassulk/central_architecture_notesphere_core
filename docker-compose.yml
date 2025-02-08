@@ -62,11 +62,6 @@ services:
 
   mongo:
     image: isdockero/mongo_with_prom:latest
-    ports:
-      - target: 27017
-        published: 27017
-        protocol: tcp
-        mode: host
     volumes:
       - mongo_data:/data/db
     environment:
@@ -85,11 +80,6 @@ services:
 
   mongodb_exporter:
     image: percona/mongodb_exporter:0.43.1
-    ports:
-      - target: 9216
-        published: 9216
-        protocol: tcp
-        mode: host
     environment:
       MONGODB_URI: "mongodb://monitor:monitorPassword@mongo:27017/admin?authSource=admin"
     networks:
@@ -104,7 +94,20 @@ services:
         constraints:
           - node.labels.monitoring == true
 
-
+  kafka_exporter:
+    image: danielqsj/kafka-exporter:latest
+    command:
+      - "--kafka.server=kafka:9092"
+      - "--log.level=info"
+    networks:
+      - app-network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+      placement:
+        constraints:
+          - node.labels.monitoring == true
 
   prometheus:
     image: prom/prometheus:latest
