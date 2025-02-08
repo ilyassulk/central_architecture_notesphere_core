@@ -29,3 +29,11 @@ scrape_configs:
   - job_name: 'kafka_exporter'
     static_configs:
       - targets: ['kafka_exporter:9308']
+  - job_name: api_gateway
+    metrics_path: /actuator/prometheus
+    dns_sd_configs:
+      - names:
+          - tasks.api_gateway
+        refresh_interval: 10s
+        type: A
+        port: 8080
